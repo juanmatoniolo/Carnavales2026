@@ -1,0 +1,29 @@
+.historia {
+    margin-bottom: 3rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.historia h3 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.historia p {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.carousel {
+    margin-top: 1rem;
+}
+
+.slideImg {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+}

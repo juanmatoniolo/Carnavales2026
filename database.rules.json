@@ -1,0 +1,13 @@
+{
+	"rules": {
+		"usuarios": {
+			".read": true,
+			".write": true,
+			".indexOn": ["username"]
+		},
+		"comparsas": {
+			".read": true,
+			".write": true
+		}
+	}
+}

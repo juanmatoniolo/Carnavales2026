@@ -1,0 +1,40 @@
+{
+  "name": "App Name",
+  "short_name": "App",
+  "description": "Descripción de tu app",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#8e78df",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any",
+      "media": "(prefers-color-scheme: light)"
+    },
+    {
+      "src": "/android-chrome-512x512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any",
+      "media": "(prefers-color-scheme: light)"
+    },
+    {
+      "src": "/android-chrome-192x192-dark.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any",
+      "media": "(prefers-color-scheme: dark)"
+    },
+    {
+      "src": "/android-chrome-512x512-dark.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any",
+      "media": "(prefers-color-scheme: dark)"
+    }
+  ]
+}
