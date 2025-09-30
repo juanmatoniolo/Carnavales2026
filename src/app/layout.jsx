@@ -10,10 +10,7 @@ import { Inter, Great_Vibes } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const greatVibes = Great_Vibes({ weight: '400', subsets: ['latin'], variable: '--font-greatvibes' });
 
-/**
- * Sugerencia: definí NEXT_PUBLIC_SITE_URL (prod) p/ URLs absolutas correctas.
- * Ej: https://carnavalchajari.com
- */
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export const metadata = {
@@ -23,7 +20,6 @@ export const metadata = {
   alternates: {
     canonical: '/',
   },
-  // Favicons / icons con light & dark
   icons: {
     icon: [
       { url: '/favicon-32x32.webp', sizes: '32x32', type: 'image/webp', media: '(prefers-color-scheme: light)' },

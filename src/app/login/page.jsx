@@ -64,7 +64,7 @@ export default function LoginPage() {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Usuario (ej: Ferro o Fenix)"
+                                placeholder="Usuario"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
