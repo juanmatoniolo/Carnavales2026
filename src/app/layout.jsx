@@ -48,11 +48,11 @@ export const metadata = {
     description: 'Sistema de gestión de comparsas y bailarines',
     images: [
       {
-        url: '/og-image.webp',
+        url: '/logo.png',
         width: 1200,
         height: 630,
         alt: 'Carnaval Chajarí – Máscara y plumas',
-        type: 'image/webp',
+        type: 'image/png',
       },
     ],
   },
