@@ -16,7 +16,8 @@
     "react": "19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "19.1.0",
-    "swiper": "^11.2.10"
+    "swiper": "^11.2.10",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

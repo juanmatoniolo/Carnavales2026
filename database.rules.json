@@ -8,6 +8,10 @@
 		"comparsas": {
 			".read": true,
 			".write": true
+		},
+		"bailarines": {
+			".read": true,
+			".write": true
 		}
 	}
 }

@@ -29,33 +29,72 @@ export default function PanelLayout({ children }) {
 
     if (!ready) return null;
 
+    // 🎨 Estilos dinámicos por comparsa
+    const comparsaStyles = {
+        Ferro: { color: '#1c6a1f' },
+        Velez: { color: '#03a9f4' },
+        Primero: { color: '#9c27b0' },
+        Sanclemente: { color: '#d9cc3a' },
+        root: { color: '#000' }, // admin
+    };
+
     return (
         <ProtectedRoute>
             {/* Header del panel */}
             <header className={styles.header}>
                 <div className={styles.left}>
                     <Link href="/panel" className={styles.brand}>
-                        <Image src={logo} alt="Logo Carnaval" width={44} height={44} />
+                        <Image
+                            src={logo}
+                            alt="Logo Carnaval"
+                            width={44}
+                            height={44}
+                        />
+                        {/* Comparsa con su escudo */}
+                        {usuario && usuario !== 'root' && (
+                            <div
+                                className="d-flex align-items-center gap-2 ms-3"
+                                style={comparsaStyles[usuario] || {}}
+                            >
+                                <Image
+                                    src={`/${usuario}.webp`}
+                                    alt={usuario}
+                                    width={32}
+                                    height={32}
+                                />
+                                <span className="fw-bold">
+                                    {usuario}
+                                </span>
+                            </div>
+                        )}
+                        {usuario === 'root' && (
+                            <span className="ms-3 fw-bold">
+                                Administrador
+                            </span>
+                        )}
                     </Link>
                 </div>
 
                 <nav className={styles.nav}>
                     <Link
                         href="/panel/listar"
-                        className={`${styles.navLink} ${isActive('/panel/listar') ? styles.active : ''}`}
+                        className={`${styles.navLink} ${
+                            isActive('/panel/listar') ? styles.active : ''
+                        }`}
                     >
                         Listar
                     </Link>
                     <Link
                         href="/panel/agregar"
-                        className={`${styles.navLink} ${isActive('/panel/agregar') ? styles.active : ''}`}
+                        className={`${styles.navLink} ${
+                            isActive('/panel/agregar') ? styles.active : ''
+                        }`}
                     >
                         Agregar
                     </Link>
                 </nav>
 
                 <div className={styles.right}>
-
                     <button
                         onClick={handleLogout}
                         className={styles.logoutBtn}
