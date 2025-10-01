@@ -11,7 +11,6 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
 
-    // Función para hacer scroll suave cuando ya estás en "/"
     const handleScroll = (e, targetId) => {
         e.preventDefault();
         const el = document.getElementById(targetId);

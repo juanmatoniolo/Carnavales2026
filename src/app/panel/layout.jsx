@@ -50,7 +50,6 @@ export default function PanelLayout({ children }) {
                     </Link>
                 </div>
 
-                {/* Perfil con menú desplegable */}
                 <div className={styles.right}>
                     <div
                         className={styles.profile}
