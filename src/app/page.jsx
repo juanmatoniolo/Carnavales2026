@@ -41,10 +41,8 @@ export default function Home() {
       <Header />
       <Hero />
 
-      {/* Historia general del Carnaval */}
       <Historias />
 
-      {/* Historias de cada comparsa */}
       <section className={styles.historias}>
         <h2 className='text-center' >🎭 Historias de nuestras comparsas</h2>
         {comparsas.map((c, i) => (
@@ -58,7 +56,6 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Participar */}
       <Participar comparsas={comparsas} />
 
       <Footer />

@@ -1,7 +1,7 @@
 .footer {
     text-align: center;
     padding: 1.5rem;
-    background-color: #111; /* Fondo oscuro */
+    background-color: #111;
     color: #fff;
 }
 
@@ -18,7 +18,6 @@
     font-size: 0.9rem;
 }
 
-/* Links sin decoración */
 .link {
     color: #fff;
     text-decoration: none;
@@ -29,7 +28,7 @@
     font-size: small;
 }
 
-/* Links sin decoración */
+
 .link2 {
     color: #fff;
     text-decoration: none;
@@ -39,7 +38,8 @@
     transition: color 0.2s ease, opacity 0.2s ease;
     font-size: medium;
 }
+
 .link:hover {
-    color: var(--color-acento); /* Rosa acento del carnaval */
+    color: var(--color-acento);
     opacity: 0.9;
 }

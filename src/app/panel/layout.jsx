@@ -11,6 +11,7 @@ import logo from '/public/logo.png';
 export default function PanelLayout({ children }) {
     const [usuario, setUsuario] = useState('');
     const [ready, setReady] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
     const pathname = usePathname();
 
     useEffect(() => {
@@ -24,23 +25,13 @@ export default function PanelLayout({ children }) {
 
     const handleLogout = () => {
         localStorage.removeItem('usuario');
-        window.location.href = '/login'; // evita estados viejos en hidratación
+        window.location.href = '/login';
     };
 
     if (!ready) return null;
 
-    // 🎨 Estilos dinámicos por comparsa
-    const comparsaStyles = {
-        Ferro: { color: '#1c6a1f' },
-        Velez: { color: '#03a9f4' },
-        Primero: { color: '#9c27b0' },
-        Sanclemente: { color: '#d9cc3a' },
-        root: { color: '#000' }, // admin
-    };
-
     return (
         <ProtectedRoute>
-            {/* Header del panel */}
             <header className={styles.header}>
                 <div className={styles.left}>
                     <Link href="/panel" className={styles.brand}>
@@ -50,62 +41,79 @@ export default function PanelLayout({ children }) {
                             width={44}
                             height={44}
                         />
-                        {/* Comparsa con su escudo */}
-                        {usuario && usuario !== 'root' && (
-                            <div
-                                className="d-flex align-items-center gap-2 ms-3"
-                                style={comparsaStyles[usuario] || {}}
-                            >
-                                <Image
-                                    src={`/${usuario}.webp`}
-                                    alt={usuario}
-                                    width={32}
-                                    height={32}
-                                />
-                                <span className="fw-bold">
-                                    {usuario}
-                                </span>
-                            </div>
-                        )}
-                        {usuario === 'root' && (
-                            <span className="ms-3 fw-bold">
-                                Administrador
-                            </span>
-                        )}
+                        <span className="ms-2 fw-bold">Carnaval Panel</span>
                     </Link>
                 </div>
 
-                <nav className={styles.nav}>
-                    <Link
-                        href="/panel/listar"
-                        className={`${styles.navLink} ${
-                            isActive('/panel/listar') ? styles.active : ''
-                        }`}
-                    >
-                        Listar
-                    </Link>
-                    <Link
-                        href="/panel/agregar"
-                        className={`${styles.navLink} ${
-                            isActive('/panel/agregar') ? styles.active : ''
-                        }`}
-                    >
-                        Agregar
-                    </Link>
-                </nav>
-
+                {/* Perfil con menú desplegable */}
                 <div className={styles.right}>
-                    <button
-                        onClick={handleLogout}
-                        className={styles.logoutBtn}
-                        type="button"
+                    <div
+                        className={styles.profile}
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
                     >
-                        Cerrar sesión
-                    </button>
+                        <Image
+                            src={`/${usuario !== 'root' ? usuario : 'admin'}.webp`}
+                            alt={usuario}
+                            width={36}
+                            height={36}
+                            className={styles.avatar}
+                        />
+                        <span className={styles.username}>
+                            {usuario === 'root' ? 'Administrador' : usuario}
+                        </span>
+                    </div>
+
+                    {dropdownOpen && (
+                        <div className={styles.dropdown}>
+                            <Link
+                                href="/panel"
+                                className={`${styles.dropdownItem} ${isActive('/panel') ? styles.active : ''}`}
+                            >
+                                Home
+                            </Link>
+                            <Link
+                                href="/panel/listar"
+                                className={`${styles.dropdownItem} ${isActive('/panel/listar') ? styles.active : ''}`}
+                            >
+                                Mi lista
+                            </Link>
+                            <Link
+                                href="/panel/agregar"
+                                className={`${styles.dropdownItem} ${isActive('/panel/agregar') ? styles.active : ''}`}
+                            >
+                                Agregar
+                            </Link>
+
+                            <div className={styles.dropdownDivider}></div>
+                            <div className={styles.dropdownGroup}>
+                                <span className={styles.dropdownLabel}>⚙️ Settings</span>
+                                <Link
+                                    href="/panel/datos"
+                                    className={`${styles.dropdownItem} ${isActive('/panel/mis-datos') ? styles.active : ''}`}
+                                >
+                                    Mis datos
+                                </Link>
+                                <Link
+                                    href="/panel/password"
+                                    className={`${styles.dropdownItem} ${isActive('/panel/password') ? styles.active : ''}`}
+                                >
+                                    Cambiar contraseña
+                                </Link>
+                            </div>
+
+                            <div className={styles.dropdownDivider}></div>
+                            <button
+                                onClick={handleLogout}
+                                className={styles.logoutBtn}
+                                type="button"
+                            >
+                                🚪 Cerrar sesión
+                            </button>
+                        </div>
+                    )}
                 </div>
             </header>
 
-            {/* Contenido del panel */}
             <div className={styles.container}>
                 <section>{children}</section>
             </div>

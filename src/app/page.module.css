@@ -128,7 +128,6 @@
     transform: scale(1.05);
 }
 
-/* Contenido dentro del botón (logo + texto) */
 .cardContent {
     display: flex;
     align-items: center;
@@ -146,7 +145,6 @@
     object-fit: contain;
 }
 
-/* Colores por comparsa */
 .ferro {
     background-color: var(--color-ferro);
 }
@@ -194,7 +192,6 @@
     font-weight: 500;
 }
 
-/* ✅ Pantallas grandes: fechas en fila */
 @media (min-width: 1024px) {
     .fechasLista {
         display: flex;
