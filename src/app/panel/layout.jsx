@@ -20,6 +20,11 @@ export default function PanelLayout({ children }) {
         setReady(true);
     }, []);
 
+    // 🔄 cerrar menú al cambiar ruta
+    useEffect(() => {
+        setDropdownOpen(false);
+    }, [pathname]);
+
     const isRoot = useMemo(() => usuario === 'root', [usuario]);
     const isActive = (href) => pathname === href;
 
@@ -89,7 +94,7 @@ export default function PanelLayout({ children }) {
                                 <span className={styles.dropdownLabel}>⚙️ Settings</span>
                                 <Link
                                     href="/panel/datos"
-                                    className={`${styles.dropdownItem} ${isActive('/panel/mis-datos') ? styles.active : ''}`}
+                                    className={`${styles.dropdownItem} ${isActive('/panel/datos') ? styles.active : ''}`}
                                 >
                                     Mis datos
                                 </Link>
@@ -100,6 +105,19 @@ export default function PanelLayout({ children }) {
                                     Cambiar contraseña
                                 </Link>
                             </div>
+
+                            {/* Solo para root */}
+                            {usuario === 'root' && (
+                                <>
+                                    <div className={styles.dropdownDivider}></div>
+                                    <Link
+                                        href="/panel/comparsas"
+                                        className={`${styles.dropdownItem} ${isActive('/panel/comparsas') ? styles.active : ''}`}
+                                    >
+                                        🏆 Comparsas
+                                    </Link>
+                                </>
+                            )}
 
                             <div className={styles.dropdownDivider}></div>
                             <button
