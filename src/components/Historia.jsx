@@ -14,7 +14,7 @@ export default function Historia({ titulo, descripcion, color = '#000', imagenes
                 modules={[Navigation, Pagination]}
                 navigation
                 pagination={{ clickable: true }}
-                spaceBetween={10}
+                spaceBetween={16}
                 slidesPerView={2}
                 breakpoints={{
                     640: { slidesPerView: 2 },
@@ -24,7 +24,7 @@ export default function Historia({ titulo, descripcion, color = '#000', imagenes
                 className={styles.carousel}
             >
                 {imagenes.map((src, i) => (
-                    <SwiperSlide key={i}>
+                    <SwiperSlide key={i} className={styles.slide}>
                         <img src={src} alt={`Imagen ${i + 1}`} className={styles.slideImg} />
                     </SwiperSlide>
                 ))}

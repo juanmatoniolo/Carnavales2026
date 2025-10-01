@@ -17,19 +17,17 @@
 .title {
     font-size: 4rem;
     font-family: var(--font-title), cursive;
-    color: #e91e63;
+    color: var(--color-acento);
 }
 
 .subtitle {
     font-size: 1rem;
     color: #555;
-
     margin-top: 1.5em;
 }
 
 .comparsas {
     padding: 2rem 1rem;
-
 }
 
 .comparsas h2 {
@@ -62,19 +60,19 @@
 }
 
 .card:nth-child(1) {
-    border-left: 6px solid #1c6a1f;
+    border-left: 6px solid var(--color-ferro);
 }
 
 .card:nth-child(2) {
-    border-left: 6px solid #03a9f4;
+    border-left: 6px solid var(--color-velez);
 }
 
 .card:nth-child(3) {
-    border-left: 6px solid #9c27b0;
+    border-left: 6px solid var(--color-primero);
 }
 
 .card:nth-child(4) {
-    border-left: 6px solid #d9cc3a;
+    border-left: 6px solid var(--color-sanclemente);
 }
 
 .callToAction {
@@ -83,14 +81,14 @@
 }
 
 .cta {
-    background-color: #4caf50;
+    background-color: var(--color-cta);
     color: white;
     padding: 0.8rem 2rem;
     border-radius: 12px;
     font-size: 1.1rem;
     font-weight: bold;
     text-decoration: none;
-    box-shadow: 0 0 12px #4caf50;
+    box-shadow: 0 0 12px var(--color-cta);
 }
 
 .participar {
@@ -132,19 +130,19 @@
 
 /* Colores por comparsa */
 .ferro {
-    background-color: #1c6a1f;
+    background-color: var(--color-ferro);
 }
 
 .velez {
-    background-color: #03a9f4;
+    background-color: var(--color-velez);
 }
 
 .primero {
-    background-color: #9c27b0;
+    background-color: var(--color-primero);
 }
 
 .sanclemente {
-    background-color: #d9cc3a;
+    background-color: var(--color-sanclemente);
     color: #000;
 }
 
@@ -173,7 +171,25 @@
     margin-bottom: 0.8rem;
     padding: 0.8rem 1rem;
     border-radius: 8px;
-    border-left: 6px solid #e91e63;
+    border-left: 6px solid var(--color-acento);
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
     font-weight: 500;
+}
+
+/* ✅ Pantallas grandes: fechas en fila */
+@media (min-width: 1024px) {
+    .fechasLista {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        max-width: 100%;
+        justify-content: center;
+    }
+
+    .fechasLista li {
+        margin-bottom: 0;
+        flex: 1;
+        min-width: 220px;
+        text-align: center;
+    }
 }
