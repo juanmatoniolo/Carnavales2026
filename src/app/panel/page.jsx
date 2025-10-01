@@ -26,8 +26,8 @@ export default function PanelPage() {
                                 comparsa,
                                 nombre: b.nombre || '',
                                 dni: b.dni || '',
-                                fechaNacimiento: b.fechaNacimiento || '',
-                                createdAt: b.createdAt?.epoch || null,
+                                fechaNacimiento: b.fechaNacimiento || '', // <-- YYYY-MM-DD (string)
+                                createdAt: b.createdAt?.epoch || null,    // <-- epoch (number)
                             });
                         });
                     });
@@ -52,7 +52,17 @@ export default function PanelPage() {
         Sanclemente: { fontWeight: 'bold', color: '#d9cc3a' },
     };
 
-    // 📅 Formatear fecha DD/MM/YYYY
+    // 📅 FECHA DE NACIMIENTO (string YYYY-MM-DD -> DD/MM/YYYY) SIN Date()
+    const formatYMD = (ymd) => {
+        if (!ymd || typeof ymd !== 'string') return '-';
+        const [y, m, d] = ymd.split('-');
+        if (!y || !m || !d) return '-';
+        // chequeo básico de longitud/números
+        if (y.length !== 4) return '-';
+        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+    };
+
+    // 📅 Para epoch (createdAt) sí usamos Date local
     const formatDate = (epoch) => {
         if (!epoch) return '-';
         const d = new Date(epoch);
@@ -75,23 +85,25 @@ export default function PanelPage() {
         });
     };
 
-    // 🔍 Filtro dinámico
+    // 🔍 Filtro dinámico (busca por bruto y formateado)
     const bailarinesFiltrados = bailarines.filter((b) => {
         const q = filtro.toLowerCase();
+        const fechaFormateada = formatYMD(b.fechaNacimiento);
         return (
             b.nombre.toLowerCase().includes(q) ||
             b.dni.includes(q) ||
-            b.fechaNacimiento.includes(q)
+            (b.fechaNacimiento && b.fechaNacimiento.includes(q)) || // YYYY-MM-DD
+            (fechaFormateada !== '-' && fechaFormateada.includes(q)) // DD/MM/YYYY
         );
     });
 
-    // 📤 Exportar a Excel
+    // 📤 Exportar a Excel (usa formatYMD para nacimiento)
     const exportToExcel = () => {
         const ws = XLSX.utils.json_to_sheet(
             bailarines.map((b) => ({
                 Nombre: b.nombre,
                 DNI: b.dni,
-                'Fecha Nacimiento': formatDate(b.fechaNacimiento),
+                'Fecha Nacimiento': formatYMD(b.fechaNacimiento), // ✅ sin Date()
                 Comparsa: b.comparsa,
                 'Fecha de Carga': b.createdAt
                     ? `${formatDate(b.createdAt)} ${formatTime(b.createdAt)}`
@@ -107,10 +119,7 @@ export default function PanelPage() {
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h3 className="m-0">Listado de Bailarines</h3>
-                <button
-                    className="btn btn-success btn-sm"
-                    onClick={exportToExcel}
-                >
+                <button className="btn btn-success btn-sm" onClick={exportToExcel}>
                     Descargar Excel
                 </button>
             </div>
@@ -147,7 +156,7 @@ export default function PanelPage() {
                                     <td style={{ whiteSpace: 'nowrap' }}>{b.nombre}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>{b.dni}</td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
-                                        {formatDate(b.fechaNacimiento)}
+                                        {formatYMD(b.fechaNacimiento) /* ✅ NADA de Date() acá */}
                                     </td>
                                     <td
                                         style={{

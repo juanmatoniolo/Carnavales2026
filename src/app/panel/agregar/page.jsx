@@ -7,7 +7,7 @@ import { ref, push, update } from 'firebase/database';
 const CLUBS = ['Ferro', 'Velez', 'Primero', 'Sanclemente'];
 
 /* ==========
-   Helpers fecha
+   Helpers fecha (SIN caídas a new Date(string))
    ========== */
 
 // YYYY-MM-DD
@@ -19,27 +19,28 @@ const MDY_RE = /^(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](\d{4})$/;
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
-// Convierte Date a YYYY-MM-DD usando **hora local** (no ISO/UTC)
+// Formatea Date -> YYYY-MM-DD usando **getFullYear/getMonth/getDate** (LOCAL)
 const dateToYMD_Local = (d) =>
     `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 
-// Convierte serial de Excel a YYYY-MM-DD (con UTC para consistencia del serial)
+// Serial Excel -> YYYY-MM-DD (usando UTC para evitar drift)
 const excelSerialToYMD = (serial) => {
-    const base = Date.UTC(1899, 11, 30); // Excel base
+    const base = Date.UTC(1899, 11, 30);
     const ms = base + serial * 86400000;
     const d = new Date(ms);
     return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
 };
 
-// Preferimos DMY por contexto es-AR
+// Por contexto es-AR, preferimos DMY si encaja
 const looksLikeDMY = (s) => {
     const m = s.match(DMY_RE);
     if (!m) return false;
     const day = parseInt(m[1], 10);
-    if (day > 12) return true; // inequívoco DMY
-    return true; // preferencia local
+    if (day > 12) return true;
+    return true;
 };
 
+// Normaliza a YYYY-MM-DD **sin** usar new Date(string) como fallback
 const normalizeDate = (raw) => {
     if (raw == null) return '';
 
@@ -54,8 +55,10 @@ const normalizeDate = (raw) => {
     const s = String(raw).trim();
     if (!s) return '';
 
+    // ya viene correcto
     if (YMD_RE.test(s)) return s;
 
+    // dd/mm/yyyy
     const dmy = s.match(DMY_RE);
     if (dmy && looksLikeDMY(s)) {
         const d = pad2(dmy[1]);
@@ -64,6 +67,7 @@ const normalizeDate = (raw) => {
         return `${y}-${m}-${d}`;
     }
 
+    // mm/dd/yyyy
     const mdy = s.match(MDY_RE);
     if (mdy && parseInt(mdy[1], 10) <= 12 && parseInt(mdy[2], 10) <= 31) {
         const m = pad2(mdy[1]);
@@ -72,12 +76,7 @@ const normalizeDate = (raw) => {
         return `${y}-${m}-${d}`;
     }
 
-    // Último recurso: parse local, formateado local (no ISO)
-    const tryDate = new Date(s);
-    if (!isNaN(tryDate.getTime())) {
-        return dateToYMD_Local(tryDate);
-    }
-
+    // si no encaja, inválida
     return '';
 };
 
@@ -93,13 +92,13 @@ export default function AgregarPage() {
     const [club, setClub] = useState('');
     const [nombre, setNombre] = useState('');
     const [dni, setDni] = useState('');
-    const [fechaNacimiento, setFechaNacimiento] = useState(''); // input date (YYYY-MM-DD de HTML)
+    const [fechaNacimiento, setFechaNacimiento] = useState(''); // valor de <input type="date"> (YYYY-MM-DD)
     const [msg, setMsg] = useState('');
     const [error, setError] = useState('');
 
     const [pasted, setPasted] = useState('');
-    const [previewBulk, setPreviewBulk] = useState([]);   // pegado
-    const [previewExcel, setPreviewExcel] = useState([]); // excel
+    const [previewBulk, setPreviewBulk] = useState([]);   // pegado (editable)
+    const [previewExcel, setPreviewExcel] = useState([]); // excel (editable)
     const [excelFileName, setExcelFileName] = useState('');
 
     useEffect(() => {
@@ -133,12 +132,11 @@ export default function AgregarPage() {
         const ws = XLSX.utils.json_to_sheet(data, { header: ['nombre', 'dni', 'fechaNacimiento'] });
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Bailarines');
-        // Fechas como texto dd/mm/aaaa para que el usuario complete sin seriales
         XLSX.writeFile(wb, 'plantilla_bailarines.xlsx');
     };
 
     /* ==========
-       GUARDAR INDIVIDUAL (sin previsualización)
+       GUARDAR INDIVIDUAL (sin previsualización, sin normalizar de más)
        ========== */
     const handleAddOne = async (e) => {
         e.preventDefault();
@@ -149,8 +147,8 @@ export default function AgregarPage() {
             return setError('Completá todos los campos.');
         }
 
-        // El input type="date" ya es YYYY-MM-DD; igual normalizamos por seguridad
-        const ymd = normalizeDate(fechaNacimiento);
+        // El input type="date" SIEMPRE devuelve YYYY-MM-DD -> validamos y guardamos TAL CUAL
+        const ymd = String(fechaNacimiento).trim();
         if (!isValidYMD(ymd)) {
             return setError('Fecha inválida. Usá el selector de fecha.');
         }
@@ -159,7 +157,7 @@ export default function AgregarPage() {
             const payload = {
                 nombre: nombre.trim(),
                 dni: dni.trim(),
-                fechaNacimiento: ymd, // se guarda texto YYYY-MM-DD (sin Date/ISO)
+                fechaNacimiento: ymd, // texto plano YYYY-MM-DD (sin Date/ISO)
                 createdAt: stamp(),
             };
             const listRef = ref(db, `bailarines/${club}`);
@@ -176,7 +174,7 @@ export default function AgregarPage() {
     };
 
     /* ==========
-       PEGADO -> PREVIEW MASIVO (sin mostrar YYYY-MM-DD)
+       PEGADO -> PREVIEW/EDICIÓN (sin mostrar normalizada, pero guardando normalizada)
        ========== */
     const parsePastedWithDiagnostics = (text) => {
         const lines = text
@@ -186,7 +184,6 @@ export default function AgregarPage() {
 
         if (lines.length === 0) return [];
 
-        // Detectar separador: tab, ; o ,
         const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
 
         const headersRaw = lines[0].split(sep).map((s) => s.trim());
@@ -219,8 +216,7 @@ export default function AgregarPage() {
                 nombre: cleanNombre,
                 dni: cleanDni,
                 fechaRaw: cFecha || '',
-                // mantenemos la normalizada para guardar, pero NO se muestra en la tabla
-                _fechaNormalizada: normalized,
+                _fechaNormalizada: normalized, // para guardar
                 valido,
                 motivo,
             };
@@ -233,6 +229,29 @@ export default function AgregarPage() {
         const rows = parsePastedWithDiagnostics(pasted);
         setPreviewBulk(rows);
         if (rows.length === 0) setError('No se detectaron filas.');
+    };
+
+    const recalcRow = (row) => {
+        const normalized = normalizeDate(row.fechaRaw);
+        const valido = !!(row.nombre && row.dni && isValidYMD(normalized));
+        let motivo = '';
+        if (!row.nombre) motivo = 'Falta nombre';
+        else if (!row.dni) motivo = 'Falta DNI';
+        else if (!isValidYMD(normalized)) motivo = 'Fecha inválida';
+        return { ...row, _fechaNormalizada: normalized, valido, motivo };
+    };
+
+    const updateBulkRow = (idx, field, value) => {
+        setPreviewBulk((prev) => {
+            const next = [...prev];
+            const row = { ...next[idx], [field]: field === 'dni' ? String(value).replace(/\D/g, '') : value };
+            if (['fechaRaw', 'nombre', 'dni'].includes(field)) {
+                next[idx] = recalcRow(row);
+            } else {
+                next[idx] = row;
+            }
+            return next;
+        });
     };
 
     const confirmBulk = async () => {
@@ -253,7 +272,7 @@ export default function AgregarPage() {
                 updates[`bailarines/${club}/${newRef.key}`] = {
                     nombre: r.nombre,
                     dni: r.dni,
-                    fechaNacimiento: r._fechaNormalizada, // guardamos la normalizada (oculta en UI)
+                    fechaNacimiento: r._fechaNormalizada, // texto YYYY-MM-DD
                     createdAt: stamp(),
                 };
             });
@@ -269,7 +288,7 @@ export default function AgregarPage() {
     };
 
     /* ==========
-       EXCEL -> PREVIEW MASIVO (sin mostrar YYYY-MM-DD)
+       EXCEL -> PREVIEW/EDICIÓN
        ========== */
     const mapExcelRow = (row, idx) => {
         const normKeys = {};
@@ -298,7 +317,7 @@ export default function AgregarPage() {
             nombre: cleanNombre,
             dni: cleanDni,
             fechaRaw: rawFecha ?? '',
-            _fechaNormalizada: normalized, // se usa solo para guardar
+            _fechaNormalizada: normalized,
             valido,
             motivo,
         };
@@ -331,6 +350,19 @@ export default function AgregarPage() {
         setExcelFileName('');
     };
 
+    const updateExcelRow = (idx, field, value) => {
+        setPreviewExcel((prev) => {
+            const next = [...prev];
+            const row = { ...next[idx], [field]: field === 'dni' ? String(value).replace(/\D/g, '') : value };
+            if (['fechaRaw', 'nombre', 'dni'].includes(field)) {
+                next[idx] = recalcRow(row);
+            } else {
+                next[idx] = row;
+            }
+            return next;
+        });
+    };
+
     const confirmExcel = async () => {
         resetFeedback();
         if (!club) return setError('Seleccioná un club.');
@@ -349,7 +381,7 @@ export default function AgregarPage() {
                 updates[`bailarines/${club}/${newRef.key}`] = {
                     nombre: r.nombre,
                     dni: r.dni,
-                    fechaNacimiento: r._fechaNormalizada, // guardamos la normalizada (oculta en UI)
+                    fechaNacimiento: r._fechaNormalizada, // texto YYYY-MM-DD
                     createdAt: stamp(),
                 };
             });
@@ -366,6 +398,8 @@ export default function AgregarPage() {
     /* ==========
        UI
        ========== */
+    const tooltipText = 'Formato esperado: dd/mm/aaaa o yyyy-mm-dd (ej.: 03/12/1995 o 1995-12-03)';
+
     return (
         <div className="container">
             <div className="mb-3 d-flex flex-wrap gap-2 align-items-center">
@@ -430,7 +464,10 @@ export default function AgregarPage() {
                         />
                     </div>
                     <div className="col-md-6">
-                        <label className="form-label">Fecha de nacimiento</label>
+                        <label className="form-label">
+                            Fecha de nacimiento{' '}
+                            <span className="text-muted" title={tooltipText} style={{ cursor: 'help' }}>ⓘ</span>
+                        </label>
                         <input
                             type="date"
                             className="form-control"
@@ -438,9 +475,7 @@ export default function AgregarPage() {
                             onChange={(e) => setFechaNacimiento(e.target.value)}
                             required
                         />
-                        <small className="text-muted">
-                            Se guardará como fecha sin zona horaria.
-                        </small>
+                        <small className="text-muted">Se guarda como texto (YYYY-MM-DD), sin zona horaria.</small>
                     </div>
 
                     {error && <div className="col-12 text-danger">{error}</div>}
@@ -458,20 +493,24 @@ export default function AgregarPage() {
                     <div className="col-12">
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
-                                <h6 className="mb-3">Subir Excel (.xlsx)</h6>
+                                <h6 className="mb-3">
+                                    Subir Excel (.xlsx){' '}
+                                    <span className="text-muted" title={tooltipText} style={{ cursor: 'help' }}>ⓘ</span>
+                                </h6>
                                 <div className="d-flex flex-column flex-sm-row gap-2 align-items-start">
                                     <input type="file" accept=".xlsx" className="form-control" onChange={onExcelChange} />
                                     <button
                                         type="button"
                                         className="btn btn-outline-secondary"
                                         onClick={handleDownloadTemplate}
+                                        title="Descarga una plantilla con columnas: nombre, dni, fechaNacimiento (dd/mm/aaaa)."
                                     >
                                         Descargar plantilla
                                     </button>
                                 </div>
                                 <small className="text-muted d-block mt-2">
-                                    Encabezados esperados: <code>nombre</code>, <code>dni</code>, <code>fechaNacimiento</code>.
-                                    La fecha puede venir como <b>dd/mm/aaaa</b>, <b>yyyy-mm-dd</b>, fecha nativa o serial de Excel.
+                                    Encabezados: <code>nombre</code>, <code>dni</code>, <code>fechaNacimiento</code>.
+                                    Fecha aceptada: <b>dd/mm/aaaa</b>, <b>yyyy-mm-dd</b>, fecha nativa o serial de Excel.
                                 </small>
 
                                 {excelFileName && (
@@ -501,6 +540,7 @@ export default function AgregarPage() {
                                                 </button>
                                             </div>
                                         </div>
+
                                         <div className="table-responsive">
                                             <table className="table table-sm align-middle">
                                                 <thead>
@@ -508,18 +548,41 @@ export default function AgregarPage() {
                                                         <th>#</th>
                                                         <th>Nombre</th>
                                                         <th>DNI</th>
-                                                        <th>Fecha</th>{/* SOLO raw visible */}
+                                                        <th>Fecha</th>
                                                         <th>Estado</th>
                                                         <th>Motivo</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {previewExcel.map((r) => (
+                                                    {previewExcel.map((r, idx) => (
                                                         <tr key={`xl-${r.row}`}>
                                                             <td>{r.row}</td>
-                                                            <td>{r.nombre}</td>
-                                                            <td>{r.dni}</td>
-                                                            <td>{String(r.fechaRaw ?? '')}</td>
+                                                            <td style={{ minWidth: 200 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.nombre}
+                                                                    onChange={(e) => updateExcelRow(idx, 'nombre', e.target.value)}
+                                                                    placeholder="Apellido Nombre"
+                                                                />
+                                                            </td>
+                                                            <td style={{ minWidth: 140 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.dni}
+                                                                    onChange={(e) => updateExcelRow(idx, 'dni', e.target.value)}
+                                                                    placeholder="12345678"
+                                                                    inputMode="numeric"
+                                                                />
+                                                            </td>
+                                                            <td style={{ minWidth: 170 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.fechaRaw}
+                                                                    onChange={(e) => updateExcelRow(idx, 'fechaRaw', e.target.value)}
+                                                                    placeholder="dd/mm/aaaa o yyyy-mm-dd"
+                                                                    title={tooltipText}
+                                                                />
+                                                            </td>
                                                             <td>
                                                                 {r.valido ? (
                                                                     <span className="badge text-bg-success">Válido</span>
@@ -533,6 +596,7 @@ export default function AgregarPage() {
                                                 </tbody>
                                             </table>
                                         </div>
+
                                     </div>
                                 )}
                             </div>
@@ -543,7 +607,10 @@ export default function AgregarPage() {
                     <div className="col-12">
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
-                                <h6 className="mb-3">Pegar datos (CSV/TSV)</h6>
+                                <h6 className="mb-3">
+                                    Pegar datos (CSV/TSV){' '}
+                                    <span className="text-muted" title={tooltipText} style={{ cursor: 'help' }}>ⓘ</span>
+                                </h6>
                                 <textarea
                                     className="form-control"
                                     rows={6}
@@ -552,6 +619,7 @@ export default function AgregarPage() {
                                     placeholder={`nombre,dni,fechaNacimiento
 Pérez Juan,12345678,21/05/1990
 García Ana,34566789,01/12/1992`}
+                                    title="Pegá con encabezados: nombre,dni,fechaNacimiento"
                                 />
                                 <div className="mt-2 d-flex gap-2">
                                     <button onClick={onPastePreview} type="button" className="btn btn-warning">
@@ -595,18 +663,41 @@ García Ana,34566789,01/12/1992`}
                                                         <th>#</th>
                                                         <th>Nombre</th>
                                                         <th>DNI</th>
-                                                        <th>Fecha</th>{/* SOLO raw visible */}
+                                                        <th>Fecha</th>
                                                         <th>Estado</th>
                                                         <th>Motivo</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {previewBulk.map((r) => (
+                                                    {previewBulk.map((r, idx) => (
                                                         <tr key={`pg-${r.row}`}>
                                                             <td>{r.row}</td>
-                                                            <td>{r.nombre}</td>
-                                                            <td>{r.dni}</td>
-                                                            <td>{r.fechaRaw || '-'}</td>
+                                                            <td style={{ minWidth: 200 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.nombre}
+                                                                    onChange={(e) => updateBulkRow(idx, 'nombre', e.target.value)}
+                                                                    placeholder="Apellido Nombre"
+                                                                />
+                                                            </td>
+                                                            <td style={{ minWidth: 140 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.dni}
+                                                                    onChange={(e) => updateBulkRow(idx, 'dni', e.target.value)}
+                                                                    placeholder="12345678"
+                                                                    inputMode="numeric"
+                                                                />
+                                                            </td>
+                                                            <td style={{ minWidth: 170 }}>
+                                                                <input
+                                                                    className="form-control form-control-sm"
+                                                                    value={r.fechaRaw}
+                                                                    onChange={(e) => updateBulkRow(idx, 'fechaRaw', e.target.value)}
+                                                                    placeholder="dd/mm/aaaa o yyyy-mm-dd"
+                                                                    title={tooltipText}
+                                                                />
+                                                            </td>
                                                             <td>
                                                                 {r.valido ? (
                                                                     <span className="badge text-bg-success">Válido</span>
@@ -620,6 +711,7 @@ García Ana,34566789,01/12/1992`}
                                                 </tbody>
                                             </table>
                                         </div>
+
                                     </div>
                                 )}
                             </div>
