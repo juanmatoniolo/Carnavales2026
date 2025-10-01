@@ -14,7 +14,7 @@ export default function Home() {
       nombre: 'Ferro',
       descripcion: 'Fénix es energía pura...',
       color: 'var(--color-ferro)',
-      imagenes: ['/logo.jpg', '/logo.jpg'],
+      imagenes: [ '/Fenix/fenix.webp','/Fenix/fenix1.webp','/Fenix/fenix2.webp','/Fenix/fenix3.webp','/Fenix/fenix4.webp','/Fenix/fenix5.webp','/Fenix/fenix6.webp','/Fenix/fenix7.webp'],
     },
     {
       nombre: 'Vélez',
@@ -46,7 +46,7 @@ export default function Home() {
 
       {/* Historias de cada comparsa */}
       <section className={styles.historias}>
-        <h2>🎭 Historias de nuestras comparsas</h2>
+        <h2 className='text-center' >🎭 Historias de nuestras comparsas</h2>
         {comparsas.map((c, i) => (
           <Historia
             key={i}

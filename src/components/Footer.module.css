@@ -1,0 +1,45 @@
+.footer {
+    text-align: center;
+    padding: 1.5rem;
+    background-color: #111; /* Fondo oscuro */
+    color: #fff;
+}
+
+.copy {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.socials {
+    margin: 0.5rem 0 1rem;
+}
+
+.creator {
+    font-size: 0.9rem;
+}
+
+/* Links sin decoración */
+.link {
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s ease, opacity 0.2s ease;
+    font-size: small;
+}
+
+/* Links sin decoración */
+.link2 {
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s ease, opacity 0.2s ease;
+    font-size: medium;
+}
+.link:hover {
+    color: var(--color-acento); /* Rosa acento del carnaval */
+    opacity: 0.9;
+}
